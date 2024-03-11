@@ -5,7 +5,7 @@ pkgs.nixosTest rec {
 
   nodes = {
     foo = {
-      imports = [ ../dn42.nix ];
+      imports = [ ../modules ];
       networking.dn42 = {
         enable = true;
         as = 64600;
@@ -51,7 +51,7 @@ pkgs.nixosTest rec {
       networking.firewall.enable = false;
     };
     bar = {
-      imports = [ ../dn42.nix ];
+      imports = [ ../modules ];
       networking.dn42 = {
         enable = true;
         as = 64601;

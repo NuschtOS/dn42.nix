@@ -5,7 +5,7 @@
 
     in {
       nixosModules = rec {
-        dn42 = import ./dn42.nix;
+        dn42 = import ./modules;
         default = dn42;
       };
 
