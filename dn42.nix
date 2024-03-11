@@ -88,7 +88,7 @@ in
         function is_self_net_v4() -> bool {
           return ${if cfg.nets.v4 == []
             then "false"
-            else builtins.concatMapStringsSep " || " (net:
+            else lib.concatMapStringsSep " || " (net:
               "net ~ ${net}"
             ) cfg.nets.v4};
         }
@@ -96,7 +96,7 @@ in
         function is_self_net_v6() -> bool {
           return ${if cfg.nets.v4 == []
             then "false"
-            else builtins.concatMapStringsSep " || " (net:
+            else lib.concatMapStringsSep " || " (net:
               "net ~ ${net}"
             ) cfg.nets.v6};
         }
