@@ -32,12 +32,12 @@ in
     nets = {
       v4 = lib.mkOption {
         type = with lib.types; listOf str;
-        description = "Own IPv4 net";
+        description = "Own IPv4 networks, list of CIDR";
       };
 
       v6 = lib.mkOption {
         type = with lib.types; listOf str;
-        description = "Own IPv6 net";
+        description = "Own IPv6 networks, list of CIDR";
       };
     };
 
