@@ -84,7 +84,7 @@ in
          *  Utility functions
          */
 
-        function is_self_net() -> bool {
+        function is_self_net_v4() -> bool {
           return ${if cfg.nets.v4 == []
             then "false"
             else builtins.concatMapStringsSep " || " (net:
@@ -100,7 +100,7 @@ in
             ) cfg.nets.v6};
         }
 
-        function is_valid_network() -> bool {
+        function is_valid_network_v4() -> bool {
           return net ~ [
             172.20.0.0/14{21,29}, # dn42
             172.20.0.0/24{28,32}, # dn42 Anycast
@@ -189,7 +189,7 @@ in
 
             ipv4 {
                 import filter {
-                  if is_valid_network() && !is_self_net() then {
+                  if is_valid_network_v4() && !is_self_net_v4() then {
                     /*if (roa_check(dn42_roa, net, bgp_path.last) != ROA_VALID) then {
                       # Reject when unknown or invalid according to ROA
                       print "[dn42] ROA check failed for ", net, " ASN ", bgp_path.last;
@@ -198,7 +198,7 @@ in
                   } else reject;
                 };
 
-                export filter { if is_valid_network() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
+                export filter { if is_valid_network_v4() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
                 import limit 9000 action block;
             };
 
