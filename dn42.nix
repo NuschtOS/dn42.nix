@@ -190,7 +190,7 @@ in
                 import limit 9000 action block;
             };
 
-            ipv6 {   
+            ipv6 {
                 import filter {
                   if is_valid_network_v6() && !is_self_net_v6() then {
                     /*if (roa_check(dn42_roa_v6, net, bgp_path.last) != ROA_VALID) then {
@@ -201,7 +201,7 @@ in
                   } else reject;
                 };
                 export filter { if is_valid_network_v6() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
-                import limit 9000 action block; 
+                import limit 9000 action block;
             };
         }
 
@@ -211,7 +211,7 @@ in
               protocol bgp ${name}_4 from dnpeers {
                 neighbor ${conf.addr.v4} as ${builtins.toString conf.asn};
               }
-              
+
               protocol bgp ${name}_6 from dnpeers {
                 neighbor ${conf.addr.v6}%${conf.interface} as ${builtins.toString conf.asn};
               }
