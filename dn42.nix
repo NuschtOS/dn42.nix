@@ -65,6 +65,18 @@ in
               description = "IPv6 address of the peer.";
             };
           };
+
+          srcAddr = {
+            v4 = lib.mkOption {
+              type = with lib.types; nullOr str;
+              description = "Local IPv4 address to use for BGP.";
+            };
+
+            v6 = lib.mkOption {
+              type = with lib.types; nullOr str;
+              description = "Local IPv6 address to use for BGP.";
+            };
+          };
         };
       }));
     };
@@ -223,10 +235,16 @@ in
             (name: conf: ''
               protocol bgp ${name}_4 from dnpeers {
                 neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
+                ${lib.optionalString (conf.srcAddr.v4 != null) ''
+                  source address ${conf.srcAddr.v4};
+                ''}
               }
 
               protocol bgp ${name}_6 from dnpeers {
                 neighbor ${conf.addr.v6}%${conf.interface} as ${builtins.toString conf.as};
+                ${lib.optionalString (conf.srcAddr.v6 != null) ''
+                  source address ${conf.srcAddr.v6};
+                ''}
               }
             '')
           cfg.peers))}
