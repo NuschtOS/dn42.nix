@@ -28,14 +28,14 @@ in
       };
     };
 
-    net = {
+    nets = {
       v4 = lib.mkOption {
-        type = lib.types.str;
+        type = with lib.types; listOf str;
         description = "Own IPv4 net";
       };
 
       v6 = lib.mkOption {
-        type = lib.types.str;
+        type = with lib.types; listOf str;
         description = "Own IPv6 net";
       };
     };
@@ -85,11 +85,19 @@ in
          */
 
         function is_self_net() -> bool {
-          return net ~ ${cfg.net.v4};
+          return ${if cfg.nets.v4 == []
+            then "false"
+            else builtins.concatMapStringsSep " || " (net:
+              "net ~ ${net}"
+            ) cfg.nets.v4};
         }
 
         function is_self_net_v6() -> bool {
-          return net ~ ${cfg.net.v6};
+          return ${if cfg.nets.v4 == []
+            then "false"
+            else builtins.concatMapStringsSep " || " (net:
+              "net ~ ${net}"
+            ) cfg.nets.v6};
         }
 
         function is_valid_network() -> bool {
@@ -154,7 +162,9 @@ in
         };
 
         protocol static {
-            route ${cfg.net.v4} reject;
+            ${lib.concatMapStrings (net: ''
+              route ${net} reject;
+            '') cfg.nets.v4}
 
             ipv4 {
                 import all;
@@ -163,7 +173,9 @@ in
         }
 
         protocol static {
-            route ${cfg.net.v6} reject;
+            ${lib.concatMapStrings (net: ''
+              route ${net} reject;
+            '') cfg.nets.v4}
 
             ipv6 {
                 import all;
