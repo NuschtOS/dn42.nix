@@ -222,11 +222,11 @@ in
           (builtins.mapAttrs
             (name: conf: ''
               protocol bgp ${name}_4 from dnpeers {
-                neighbor ${conf.addr.v4} as ${builtins.toString conf.asn};
+                neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
               }
 
               protocol bgp ${name}_6 from dnpeers {
-                neighbor ${conf.addr.v6}%${conf.interface} as ${builtins.toString conf.asn};
+                neighbor ${conf.addr.v6}%${conf.interface} as ${builtins.toString conf.as};
               }
             '')
           cfg.peers))}
