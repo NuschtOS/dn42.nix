@@ -13,30 +13,30 @@ in
 
     as = lib.mkOption {
       type = lib.types.int;
-      description = "Autonomous Systemd number of yourself.";
+      description = "Autonomous System Number";
     };
 
     addr = {
       v4 = lib.mkOption {
         type = lib.types.str;
-        description = "IPv4 address of yourself.";
+        description = "Primary IPv4 address";
       };
 
       v6 = lib.mkOption {
         type = lib.types.str;
-        description = "IPv6 address of yourself.";
+        description = "Primary IPv6 address";
       };
     };
 
     net = {
       v4 = lib.mkOption {
         type = lib.types.str;
-        description = "own IPv4 net";
+        description = "Own IPv4 net";
       };
 
       v6 = lib.mkOption {
         type = lib.types.str;
-        description = "own IPv6 net";
+        description = "Own IPv6 net";
       };
     };
 
@@ -45,7 +45,7 @@ in
         options = {
           as = lib.mkOption {
             type = lib.types.int;
-            description = "Autonomous Systemd number of the peer.";
+            description = "Autonomous System number of the peer.";
           };
 
           interface = lib.mkOption {
