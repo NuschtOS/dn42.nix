@@ -176,7 +176,7 @@ in
         protocol static {
             ${lib.concatMapStrings (net: ''
               route ${net} reject;
-            '') cfg.nets.v4}
+            '') cfg.nets.v6}
 
             ipv6 {
                 import all;
