@@ -9,6 +9,7 @@ in
     routerId = lib.mkOption {
       type = lib.types.str;
       description = "32bit router identifier.";
+      default = cfg.addr.v4;
     };
 
     as = lib.mkOption {
