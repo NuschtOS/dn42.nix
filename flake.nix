@@ -15,6 +15,9 @@
           two-peers = import ./checks/two-peers.nix {
             pkgs = nixpkgs.legacyPackages.${system};
           };
+          extended-next-hop = import ./checks/extended-next-hop.nix {
+            pkgs = nixpkgs.legacyPackages.${system};
+          };
         };
       }) systems);
     };

@@ -53,15 +53,17 @@ in
             description = "Autonomous System number of the peer.";
           };
 
-          interface = lib.mkOption {
-            type = lib.types.str;
-            description = "Interface name of the peer.";
+          extendedNextHop = lib.mkOption {
+            type = lib.types.bool;
+            description = "If extended next-hop should be used. Creating IPv4 routes using an IPv6 next-hop address.";
+            default = false;
           };
 
           addr = {
             v4 = lib.mkOption {
-              type = lib.types.str;
+              type = lib.types.nullOr lib.types.str;
               description = "IPv4 address of the peer.";
+              default = null;
             };
 
             v6 = lib.mkOption {
@@ -74,6 +76,7 @@ in
             v4 = lib.mkOption {
               type = with lib.types; nullOr str;
               description = "Local IPv4 address to use for BGP.";
+              default = null;
             };
 
             v6 = lib.mkOption {
@@ -81,12 +84,27 @@ in
               description = "Local IPv6 address to use for BGP.";
             };
           };
+
+          interface = lib.mkOption {
+            type = lib.types.str;
+            description = "Interface name of the peer.";
+          };
         };
       }));
     };
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = 0 == (builtins.length (builtins.filter (conf: (!conf.extendedNextHop && (conf.addr.v4 == null || conf.srcAddr.v4 == null))) (builtins.attrValues cfg.peers)));
+        message = "dn42.nix: IPv4 addresses are required, consider using extended next hop.";
+      }
+      {
+        assertion = 0 == (builtins.length (builtins.filter (conf: (conf.extendedNextHop && (conf.addr.v4 != null || conf.srcAddr.v4 != null))) (builtins.attrValues cfg.peers)));
+        message = "dn42.nix: IPv4 addresses are disallowed, consider not using extended next hop.";
+      }
+    ];
 
     services.bird2 = {
       enable = true;
@@ -102,19 +120,11 @@ in
          */
 
         function is_self_net_v4() -> bool {
-          return ${if cfg.nets.v4 == []
-            then "false"
-            else lib.concatMapStringsSep " || " (net:
-              "net ~ ${net}"
-            ) cfg.nets.v4};
+          return net ~ [${builtins.concatStringsSep ", " cfg.nets.v4}];
         }
 
         function is_self_net_v6() -> bool {
-          return ${if cfg.nets.v4 == []
-            then "false"
-            else lib.concatMapStringsSep " || " (net:
-              "net ~ ${net}"
-            ) cfg.nets.v6};
+          return net ~ [${builtins.concatStringsSep ", " cfg.nets.v6}];
         }
 
         function is_valid_network_v4() -> bool {
@@ -201,54 +211,70 @@ in
         }
 
         template bgp dnpeers {
-            local as ${builtins.toString cfg.as};
-            path metric 1;
+          local as ${builtins.toString cfg.as};
+          path metric 1;
 
-            ipv4 {
-                import filter {
-                  if is_valid_network_v4() && !is_self_net_v4() then {
-                    /*if (roa_check(dn42_roa, net, bgp_path.last) != ROA_VALID) then {
-                      # Reject when unknown or invalid according to ROA
-                      print "[dn42] ROA check failed for ", net, " ASN ", bgp_path.last;
-                      reject;
-                    } else*/ accept;
-                  } else reject;
-                };
+          graceful restart on;
+          long lived graceful restart on;
+          interpret communities on;
+          prefer older on;
 
-                export filter { if is_valid_network_v4() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
-                import limit 9000 action block;
+          ipv4 {
+            import filter {
+              if is_valid_network_v4() && !is_self_net_v4() then {
+                /*if (roa_check(dn42_roa, net, bgp_path.last) != ROA_VALID) then {
+                  # Reject when unknown or invalid according to ROA
+                  print "[dn42] ROA check failed for ", net, " ASN ", bgp_path.last;
+                  reject;
+                } else*/ accept;
+              } else reject;
             };
 
-            ipv6 {
-                import filter {
-                  if is_valid_network_v6() && !is_self_net_v6() then {
-                    /*if (roa_check(dn42_roa_v6, net, bgp_path.last) != ROA_VALID) then {
-                      # Reject when unknown or invalid according to ROA
-                      print "[dn42] ROA check failed for ", net, " ASN ", bgp_path.last;
-                      reject;
-                    } else*/ accept;
-                  } else reject;
-                };
-                export filter { if is_valid_network_v6() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
-                import limit 9000 action block;
+            export filter { if is_valid_network_v4() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
+            
+            import limit 9000 action block;
+            import table on;
+          };
+
+          ipv6 {
+            import filter {
+              if is_valid_network_v6() && !is_self_net_v6() then {
+                /*if (roa_check(dn42_roa_v6, net, bgp_path.last) != ROA_VALID) then {
+                  # Reject when unknown or invalid according to ROA
+                  print "[dn42] ROA check failed for ", net, " ASN ", bgp_path.last;
+                  reject;
+                } else*/ accept;
+              } else reject;
             };
+
+            export filter { if is_valid_network_v6() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
+
+            import limit 9000 action block;
+            import table on;
+          };
         }
 
         ${builtins.concatStringsSep "\n" (builtins.attrValues
           (builtins.mapAttrs
-            (name: conf: ''
-              protocol bgp ${name}_4 from dnpeers {
-                neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
-                ${lib.optionalString (conf.srcAddr.v4 != null) ''
+            (name: conf: ''              
+              ${lib.optionalString (!conf.extendedNextHop) ''
+                protocol bgp ${name}_4 from dnpeers {
+                  neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
                   source address ${conf.srcAddr.v4};
-                ''}
-              }
+                }
+              ''}
 
               protocol bgp ${name}_6 from dnpeers {
-                neighbor ${conf.addr.v6}%${conf.interface} as ${builtins.toString conf.as};
-                ${lib.optionalString (conf.srcAddr.v6 != null) ''
-                  source address ${conf.srcAddr.v6};
+                ${lib.optionalString conf.extendedNextHop ''
+                  enable extended messages on;
+
+                  ipv4 {
+                    extended next hop on;    
+                  };
                 ''}
+                
+                neighbor ${conf.addr.v6}%'${conf.interface}' as ${builtins.toString conf.as};
+                source address ${conf.srcAddr.v6};
               }
             '')
           cfg.peers))}
