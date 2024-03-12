@@ -23,8 +23,8 @@ pkgs.nixosTest rec {
         as = 64600;
         addr.v4 = "172.20.0.1";
         nets.v4 = [ "172.20.0.0/24" ];
-        addr.v6 = "fec0::1";
-        nets.v6 = [ "fec0::/64" ];
+        addr.v6 = "fec1::1";
+        nets.v6 = [ "fec1::/64" ];
         peers.bar = {
           as = 64601;
           addr.v4 = (builtins.head nodes.bar.networking.interfaces.enp1s0.ipv4.addresses).address;
@@ -61,8 +61,8 @@ pkgs.nixosTest rec {
         as = 64601;
         addr.v4 = "172.20.1.1";
         nets.v4 = [ "172.20.1.0/24" ];
-        addr.v6 = "fec0:0:0:1::1";
-        nets.v6 = [ "fec0:0:0:1::/64" ];
+        addr.v6 = "fec1:0:0:1::1";
+        nets.v6 = [ "fec1:0:0:1::/64" ];
         peers.foo = {
           as = 64600;
           addr.v4 = (builtins.head nodes.foo.networking.interfaces.enp1s0.ipv4.addresses).address;
