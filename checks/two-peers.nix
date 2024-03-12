@@ -1,13 +1,25 @@
 { pkgs ? import <nixpkgs> {} }:
 
+let
+  common = {
+    imports = [ ../modules ];
+    networking.dn42.enable = true;
+    virtualisation.interfaces.enp1s0.vlan = 1;
+    networking.useNetworkd = true;
+    systemd.network.netdevs.dummy0.netdevConfig = {
+      Kind = "dummy";
+      Name = "dummy0";
+    };
+  };
+
+in
 pkgs.nixosTest rec {
   name = "two-peers";
 
   nodes = {
     foo = {
-      imports = [ ../modules ];
+      imports = [ common ];
       networking.dn42 = {
-        enable = true;
         as = 64600;
         addr.v4 = "172.20.0.1";
         nets.v4 = [ "172.20.0.0/24" ];
@@ -21,12 +33,6 @@ pkgs.nixosTest rec {
           srcAddr.v6 = (builtins.head nodes.foo.networking.interfaces.enp1s0.ipv6.addresses).address;
           interface = "enp1s0";
         };
-      };
-      virtualisation.interfaces.enp1s0.vlan = 2;
-      networking.useNetworkd = true;
-      systemd.network.netdevs.dummy0.netdevConfig = {
-        Kind = "dummy";
-        Name = "dummy0";
       };
       networking.interfaces.enp1s0 = {
         ipv4.addresses = [ {
@@ -50,9 +56,8 @@ pkgs.nixosTest rec {
       };
     };
     bar = {
-      imports = [ ../modules ];
+      imports = [ common ];
       networking.dn42 = {
-        enable = true;
         as = 64601;
         addr.v4 = "172.20.1.1";
         nets.v4 = [ "172.20.1.0/24" ];
@@ -66,12 +71,6 @@ pkgs.nixosTest rec {
           srcAddr.v6 = (builtins.head nodes.bar.networking.interfaces.enp1s0.ipv6.addresses).address;
           interface = "enp1s0";
         };
-      };
-      virtualisation.interfaces.enp1s0.vlan = 2;
-      networking.useNetworkd = true;
-      systemd.network.netdevs.dummy0.netdevConfig = {
-        Kind = "dummy";
-        Name = "dummy0";
       };
       networking.interfaces.enp1s0 = {
         ipv4.addresses = [ {
