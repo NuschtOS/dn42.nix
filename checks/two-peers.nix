@@ -48,7 +48,6 @@ pkgs.nixosTest rec {
           prefixLength = 64;
         } ];
       };
-      networking.firewall.enable = false;
     };
     bar = {
       imports = [ ../modules ];
@@ -94,7 +93,6 @@ pkgs.nixosTest rec {
           prefixLength = 64;
         } ];
       };
-      networking.firewall.enable = false;
     };
   };
 

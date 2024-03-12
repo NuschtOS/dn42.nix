@@ -3,6 +3,10 @@ let
   cfg = config.networking.dn42;
 in
 {
+  imports = [
+    ./firewall.nix
+  ];
+
   options.networking.dn42 = {
     enable = lib.mkEnableOption "Whether to enable dn42 integration.";
 
