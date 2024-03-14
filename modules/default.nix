@@ -22,6 +22,26 @@ in
       description = "Autonomous System Number";
     };
 
+    bandwidth = lib.mkOption {
+      type = lib.types.int;
+      description = "";
+    };
+
+    geo = lib.mkOption {
+      type = lib.types.int;
+      description = "";
+    };
+
+    country = lib.mkOption {
+      type = lib.types.int;
+      description = "";
+    };
+
+    blockedAs = lib.mkOption {
+      type = lib.types.listOf lib.types.int;
+      description = "";
+    };
+
     addr = {
       v4 = lib.mkOption {
         type = lib.types.str;
@@ -58,6 +78,21 @@ in
             type = lib.types.bool;
             description = "If extended next-hop should be used. Creating IPv4 routes using an IPv6 next-hop address.";
             default = false;
+          };
+
+          latency = lib.mkOption {
+            type = lib.types.int;
+            description = "";
+          };
+
+          bandwidth = lib.mkOption {
+            type = lib.types.int;
+            description = "";
+          };
+
+          crypto = lib.mkOption {
+            type = lib.types.int;
+            description = "";
           };
 
           addr = {

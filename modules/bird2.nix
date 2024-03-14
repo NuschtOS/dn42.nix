@@ -1,4 +1,5 @@
 { config, lib, ... }:
+
 let
   cfg = config.networking.dn42;
 in
@@ -18,15 +19,14 @@ in
     services.bird2 = {
       enable = true;
       config = ''
-        router id ${cfg.routerId};
+        define OWNAS = ${toString cfg.as};
+        define OWNIP = ${toString cfg.addr.v6};
 
-        protocol device {
-            scan time 10;
-        }
+        define BANDWIDTH = ${toString cfg.bandwidth};
+        define REGION_GEO = ${toString cfg.geo};
+        define REGION_COUNTRY = ${toString cfg.country};
 
-        /*
-         *  Utility functions
-         */
+        define ASN_BLACKLIST = [];
 
         function is_self_net_v4() -> bool {
           return net ~ [${builtins.concatStringsSep ", " cfg.nets.v4}];
@@ -36,39 +36,18 @@ in
           return net ~ [${builtins.concatStringsSep ", " cfg.nets.v6}];
         }
 
-        function is_valid_network_v4() -> bool {
-          return net ~ [
-            172.20.0.0/14{21,29}, # dn42
-            172.20.0.0/24{28,32}, # dn42 Anycast
-            172.21.0.0/24{28,32}, # dn42 Anycast
-            172.22.0.0/24{28,32}, # dn42 Anycast
-            172.23.0.0/24{28,32}, # dn42 Anycast
-            172.31.0.0/16+,       # ChaosVPN
-            10.100.0.0/14+,       # ChaosVPN
-            10.127.0.0/16{16,32}, # neonetwork
-            10.0.0.0/8{15,24}     # Freifunk.net
-          ];
+        function is_self_net() -> bool {
+          return is_self_net_v4() || is_self_net_v6();
         }
 
-        /*
-        roa4 table dn42_roa;
-        roa6 table dn42_roa_v6;
+        include "${../resources/community_filter.conf}";
+        include "${../resources/filters.conf}";
+      
+        router id ${cfg.routerId};
+        hostname "${config.networking.hostName}.${config.networking.domain}";
 
-        protocol static {
-            roa4 { table dn42_roa; };
-            include "/etc/bird/roa_dn42.conf";
-        };
-
-        protocol static {
-            roa6 { table dn42_roa_v6; };
-            include "/etc/bird/roa_dn42_v6.conf";
-        };
-        */
-
-        function is_valid_network_v6() -> bool {
-          return net ~ [
-            fd00::/8{44,64} # ULA address space as per RFC 4193
-          ];
+        protocol device {
+            scan time 10;
         }
 
         protocol kernel {
@@ -121,46 +100,17 @@ in
 
         template bgp dnpeers {
           local as ${builtins.toString cfg.as};
-          path metric 1;
 
+          enforce first as on;
           graceful restart on;
           long lived graceful restart on;
-          interpret communities on;
+          advertise hostname on;
           prefer older on;
 
-          ipv4 {
-            import filter {
-              if is_valid_network_v4() && !is_self_net_v4() then {
-                /*if (roa_check(dn42_roa, net, bgp_path.last) != ROA_VALID) then {
-                  # Reject when unknown or invalid according to ROA
-                  print "[dn42] ROA check failed for ", net, " ASN ", bgp_path.last;
-                  reject;
-                } else*/ accept;
-              } else reject;
-            };
-
-            export filter { if is_valid_network_v4() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
-            
-            import limit 9000 action block;
-            import table on;
-          };
-
-          ipv6 {
-            import filter {
-              if is_valid_network_v6() && !is_self_net_v6() then {
-                /*if (roa_check(dn42_roa_v6, net, bgp_path.last) != ROA_VALID) then {
-                  # Reject when unknown or invalid according to ROA
-                  print "[dn42] ROA check failed for ", net, " ASN ", bgp_path.last;
-                  reject;
-                } else*/ accept;
-              } else reject;
-            };
-
-            export filter { if is_valid_network_v6() && source ~ [RTS_STATIC, RTS_BGP] then accept; else reject; };
-
-            import limit 9000 action block;
-            import table on;
-          };
+          # defaults
+          enable route refresh on;
+          interpret communities on;
+          default bgp_local_pref 100;
         }
 
         ${builtins.concatStringsSep "\n" (builtins.attrValues
@@ -170,6 +120,14 @@ in
                 protocol bgp ${name}_4 from dnpeers {
                   neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
                   source address ${conf.srcAddr.v4};
+
+                  ipv4 {
+                    import limit 9000 action block;
+                    import table on;
+
+                    import where dn_import_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                    export where dn_export_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                  };
                 }
               ''}
 
@@ -178,9 +136,22 @@ in
                   enable extended messages on;
 
                   ipv4 {
-                    extended next hop on;    
+                    import limit 9000 action block;
+                    import table on;
+                    
+                    extended next hop on;
+                    import where dn_import_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                    export where dn_export_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
                   };
                 ''}
+
+                ipv6 {
+                  import limit 9000 action block;
+                  import table on;
+                 
+                  import where dn_import_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                  export where dn_export_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                };
                 
                 neighbor ${conf.addr.v6}%'${conf.interface}' as ${builtins.toString conf.as};
                 source address ${conf.srcAddr.v6};
