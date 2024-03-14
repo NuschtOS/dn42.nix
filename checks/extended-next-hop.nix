@@ -10,6 +10,7 @@ let
       Kind = "dummy";
       Name = "dummy0";
     };
+    environment.systemPackages = [ pkgs.jq ];
   };
 
 in
@@ -94,16 +95,22 @@ pkgs.nixosTest rec {
   };
 
   testScript = ''
+    foo.succeed("ip -6 mon > /dev/console &")
+
     foo.wait_for_unit("bird2")
     bar.wait_for_unit("bird2")
 
-    # Test basic reachability on the peering network
-    foo.wait_until_succeeds("ping -c 1 10.0.0.2")
-    bar.wait_until_succeeds("ping -c 1 10.0.0.1")
+    with subtest("Waiting for advertised IPv4 routes"):
+      foo.wait_until_succeeds("ip --json r | jq -e 'map(select(.dst == \"${builtins.head nodes.bar.networking.dn42.nets.v4}\")) | any'")
+      bar.wait_until_succeeds("ip --json r | jq -e 'map(select(.dst == \"${builtins.head nodes.foo.networking.dn42.nets.v4}\")) | any'")
 
     # Assuming IPv4 peering is up, try ping on routed dummy0 addrs
     foo.wait_until_succeeds("ping -c 1 ${nodes.bar.networking.dn42.addr.v4}")
     bar.wait_until_succeeds("ping -c 1 ${nodes.foo.networking.dn42.addr.v4}")
+
+    # with subtest("Waiting for advertised IPv6 routes"):
+    #   foo.wait_until_succeeds("ip --json -6 r | jq -e 'map(select(.dst == \"${builtins.head nodes.bar.networking.dn42.nets.v6}\")) | any'")
+    #   bar.wait_until_succeeds("ip --json -6 r | jq -e 'map(select(.dst == \"${builtins.head nodes.foo.networking.dn42.nets.v6}\")) | any'")
 
     # icmpv6 unsupported by QEMU user networking
     # foo.wait_until_succeeds("ping -c 1 ${nodes.bar.networking.dn42.addr.v6}")
