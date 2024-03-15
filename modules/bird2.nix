@@ -158,6 +158,46 @@ in
               }
             '')
           cfg.peers))}
+
+        protocol bgp ROUTE_COLLECTOR from dnpeers {
+          neighbor fd42:4242:2601:ac12::1 as 4242422602;
+          source address ${cfg.addr.v6};
+
+          # enable multihop as the collector is not locally connected
+          multihop;
+          
+          ipv4 {
+            # export all available paths to the collector    
+            add paths tx;
+
+            # import/export filters
+            import none;
+            export filter {
+              # export all valid routes
+              if ( is_valid_network_v4() && source ~ [ RTS_STATIC, RTS_BGP ] )
+              then {
+                accept;
+              }
+              reject;
+            };
+          };
+
+          ipv6 {
+            # export all available paths to the collector    
+            add paths tx;
+
+            # import/export filters
+            import none;
+            export filter {
+              # export all valid routes
+              if ( is_valid_network_v6() && source ~ [ RTS_STATIC, RTS_BGP ] )
+              then {
+                accept;
+              }
+              reject;
+            };
+          };
+        }
       '';
     };
   };
