@@ -95,6 +95,11 @@ in
             description = "";
           };
 
+          transit = lib.mkOption {
+            type = lib.types.bool;
+            description = "";
+          };
+
           addr = {
             v4 = lib.mkOption {
               type = lib.types.nullOr lib.types.str;

@@ -28,16 +28,31 @@ in
 
         define ASN_BLACKLIST = [];
 
-        function is_self_net_v4() -> bool {
+        function is_self_net4() -> bool {
           return net ~ [${builtins.concatStringsSep ", " cfg.nets.v4}];
         }
 
-        function is_self_net_v6() -> bool {
+        function is_self_net6() -> bool {
           return net ~ [${builtins.concatStringsSep ", " cfg.nets.v6}];
         }
 
-        function is_self_net() -> bool {
-          return is_self_net_v4() || is_self_net_v6();
+        roa4 table dnroa4;
+        roa6 table dnroa6;
+
+        protocol static static_roa_4 {
+          roa4 {
+            table dnroa4;
+          };
+
+          include "${../resources/roa4.conf}";
+        }
+
+        protocol static static_roa_6 {
+          roa6 {
+            table dnroa6;
+          };
+
+          include "${../resources/roa6.conf}";
         }
 
         include "${../resources/community_filter.conf}";
@@ -47,55 +62,55 @@ in
         hostname "${config.networking.hostName}.${config.networking.domain}";
 
         protocol device {
-            scan time 10;
+          scan time 10;
+        }
+   
+        protocol kernel kernel_4 {
+          scan time 20;
+
+          ipv4 {
+            import none;
+            export filter {
+              if source = RTS_STATIC then reject;
+              krt_prefsrc = ${cfg.addr.v4};
+              accept;
+            };
+          };
         }
 
-        protocol kernel {
-            scan time 20;
+        protocol kernel kernel_6 {
+          scan time 20;
 
-            ipv4 {
-                import none;
-                export filter {
-                    if source = RTS_STATIC then reject;
-                    krt_prefsrc = ${cfg.addr.v4};
-                    accept;
-                };
+          ipv6 {
+            import none;
+            export filter {
+              if source = RTS_STATIC then reject;
+              krt_prefsrc = ${cfg.addr.v6};
+              accept;
             };
+          };
         }
 
-        protocol kernel {
-            scan time 20;
+        protocol static static_4 {
+          ${lib.concatMapStrings (net: ''
+            route ${net} reject;
+          '') cfg.nets.v4}
 
-            ipv6 {
-                import none;
-                export filter {
-                    if source = RTS_STATIC then reject;
-                    krt_prefsrc = ${cfg.addr.v6};
-                    accept;
-                };
-            };
-        };
-
-        protocol static {
-            ${lib.concatMapStrings (net: ''
-              route ${net} reject;
-            '') cfg.nets.v4}
-
-            ipv4 {
-                import all;
-                export none;
-            };
+          ipv4 {
+            import all;
+            export none;
+          };
         }
 
-        protocol static {
-            ${lib.concatMapStrings (net: ''
-              route ${net} reject;
-            '') cfg.nets.v6}
-
-            ipv6 {
-                import all;
-                export none;
-            };
+        protocol static static_6 {
+          ${lib.concatMapStrings (net: ''
+            route ${net} reject;
+          '') cfg.nets.v6}
+          
+          ipv6 {
+            import all;
+            export none;
+          };
         }
 
         template bgp dnpeers {
@@ -115,7 +130,7 @@ in
 
         ${builtins.concatStringsSep "\n" (builtins.attrValues
           (builtins.mapAttrs
-            (name: conf: ''              
+            (name: conf: ''
               ${lib.optionalString (!conf.extendedNextHop) ''
                 protocol bgp ${name}_4 from dnpeers {
                   neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
@@ -125,8 +140,8 @@ in
                     import limit 9000 action block;
                     import table on;
 
-                    import where dn_import_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
-                    export where dn_export_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                    import where dn_import_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                    export where dn_export_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto}, ${lib.boolToString conf.transit});
                   };
                 }
               ''}
@@ -138,48 +153,41 @@ in
                   ipv4 {
                     import limit 9000 action block;
                     import table on;
-                    
+
                     extended next hop on;
-                    import where dn_import_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
-                    export where dn_export_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                    import where dn_import_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                    export where dn_export_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto}, ${lib.boolToString conf.transit});
                   };
                 ''}
 
                 ipv6 {
                   import limit 9000 action block;
                   import table on;
-                 
-                  import where dn_import_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
-                  export where dn_export_filter(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+
+                  import where dn_import_filter6(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
+                  export where dn_export_filter6(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto}, ${lib.boolToString conf.transit});
                 };
-                
+
                 neighbor ${conf.addr.v6}%'${conf.interface}' as ${builtins.toString conf.as};
                 source address ${conf.srcAddr.v6};
               }
             '')
           cfg.peers))}
 
-        protocol bgp ROUTE_COLLECTOR from dnpeers {
+        protocol bgp collector_6 from dnpeers {
           neighbor fd42:4242:2601:ac12::1 as 4242422602;
           source address ${cfg.addr.v6};
 
           # enable multihop as the collector is not locally connected
           multihop;
-          
+
           ipv4 {
             # export all available paths to the collector    
             add paths tx;
 
             # import/export filters
             import none;
-            export filter {
-              # export all valid routes
-              if ( is_valid_network_v4() && source ~ [ RTS_STATIC, RTS_BGP ] )
-              then {
-                accept;
-              }
-              reject;
-            };
+            export where dn_export_collector4();
           };
 
           ipv6 {
@@ -188,14 +196,7 @@ in
 
             # import/export filters
             import none;
-            export filter {
-              # export all valid routes
-              if ( is_valid_network_v6() && source ~ [ RTS_STATIC, RTS_BGP ] )
-              then {
-                accept;
-              }
-              reject;
-            };
+            export where dn_export_collector6();
           };
         }
       '';

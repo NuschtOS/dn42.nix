@@ -36,6 +36,7 @@ pkgs.nixosTest rec {
           latency = 1;
           bandwidth = 25;
           crypto = 31;
+          transit = false;
           addr.v4 = (builtins.head nodes.bar.networking.interfaces.enp1s0.ipv4.addresses).address;
           addr.v6 = (builtins.head nodes.bar.networking.interfaces.enp1s0.ipv6.addresses).address;
           srcAddr.v4 = (builtins.head nodes.foo.networking.interfaces.enp1s0.ipv4.addresses).address;
@@ -81,6 +82,7 @@ pkgs.nixosTest rec {
           latency = 1;
           bandwidth = 25;
           crypto = 31;
+          transit = false;
           addr.v4 = (builtins.head nodes.foo.networking.interfaces.enp1s0.ipv4.addresses).address;
           addr.v6 = (builtins.head nodes.foo.networking.interfaces.enp1s0.ipv6.addresses).address;
           srcAddr.v4 = (builtins.head nodes.bar.networking.interfaces.enp1s0.ipv4.addresses).address;
