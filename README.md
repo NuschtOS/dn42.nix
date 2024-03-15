@@ -8,4 +8,3 @@
 ## TODO:
 
 - auto update roa
-- announce transit networks to non transit peers
