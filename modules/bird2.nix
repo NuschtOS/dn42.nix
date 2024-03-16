@@ -93,7 +93,7 @@ in
 
         protocol static static_4 {
           ${lib.concatMapStrings (net: ''
-            route ${net} reject;
+            route ${net} unreachable;
           '') cfg.nets.v4}
 
           ipv4 {
@@ -104,7 +104,7 @@ in
 
         protocol static static_6 {
           ${lib.concatMapStrings (net: ''
-            route ${net} reject;
+            route ${net} unreachable;
           '') cfg.nets.v6}
           
           ipv6 {
