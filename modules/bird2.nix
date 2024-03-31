@@ -22,7 +22,6 @@ in
         define OWNAS = ${toString cfg.as};
         define OWNIP = ${toString cfg.addr.v6};
 
-        define BANDWIDTH = ${toString cfg.bandwidth};
         define REGION_GEO = ${toString cfg.geo};
         define REGION_COUNTRY = ${toString cfg.country};
 

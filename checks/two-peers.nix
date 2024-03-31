@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> { } }:
 
 let
   common = { pkgs, ... }: {
@@ -24,7 +24,6 @@ pkgs.nixosTest rec {
       networking.hostName = "foo";
       networking.dn42 = {
         as = 64600;
-        bandwidth = 25;
         geo = 41;
         country = 1276;
         addr.v4 = "172.20.0.1";
@@ -45,24 +44,24 @@ pkgs.nixosTest rec {
         };
       };
       networking.interfaces.enp1s0 = {
-        ipv4.addresses = [ {
+        ipv4.addresses = [{
           address = "10.0.0.1";
           prefixLength = 24;
-        } ];
-        ipv6.addresses = [ {
+        }];
+        ipv6.addresses = [{
           address = "fe80::1";
           prefixLength = 64;
-        } ];
+        }];
       };
       networking.interfaces.dummy0 = {
-        ipv4.addresses = [ {
+        ipv4.addresses = [{
           address = nodes.foo.networking.dn42.addr.v4;
           prefixLength = 24;
-        } ];
-        ipv6.addresses = [ {
+        }];
+        ipv6.addresses = [{
           address = nodes.foo.networking.dn42.addr.v6;
           prefixLength = 64;
-        } ];
+        }];
       };
     };
     bar = {
@@ -70,7 +69,6 @@ pkgs.nixosTest rec {
       networking.hostName = "bar";
       networking.dn42 = {
         as = 64601;
-        bandwidth = 25;
         geo = 41;
         country = 1276;
         addr.v4 = "172.20.1.1";
@@ -91,24 +89,24 @@ pkgs.nixosTest rec {
         };
       };
       networking.interfaces.enp1s0 = {
-        ipv4.addresses = [ {
+        ipv4.addresses = [{
           address = "10.0.0.2";
           prefixLength = 24;
-        } ];
-        ipv6.addresses = [ {
+        }];
+        ipv6.addresses = [{
           address = "fe80::2";
           prefixLength = 64;
-        } ];
+        }];
       };
       networking.interfaces.dummy0 = {
-        ipv4.addresses = [ {
+        ipv4.addresses = [{
           address = nodes.bar.networking.dn42.addr.v4;
           prefixLength = 24;
-        } ];
-        ipv6.addresses = [ {
+        }];
+        ipv6.addresses = [{
           address = nodes.bar.networking.dn42.addr.v6;
           prefixLength = 64;
-        } ];
+        }];
       };
     };
   };

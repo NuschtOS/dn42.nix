@@ -22,11 +22,6 @@ in
       description = "Autonomous System Number";
     };
 
-    bandwidth = lib.mkOption {
-      type = lib.types.int;
-      description = "";
-    };
-
     geo = lib.mkOption {
       type = lib.types.int;
       description = "";

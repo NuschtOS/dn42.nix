@@ -9,17 +9,19 @@ in
   # addresses, but there is no NixOS option for that.
   networking.firewall.interfaces = lib.mkIf enable (
     builtins.listToAttrs (
-      map (interface: {
-        name = interface;
-        value.allowedTCPPorts = [
-          # BGP
-          179
-        ];
-      }) (
-        map ({ interface, ... }: interface) (
-          builtins.attrValues config.networking.dn42.peers
+      map
+        (interface: {
+          name = interface;
+          value.allowedTCPPorts = [
+            # BGP
+            179
+          ];
+        })
+        (
+          map ({ interface, ... }: interface) (
+            builtins.attrValues config.networking.dn42.peers
+          )
         )
-      )
     )
   );
 }
