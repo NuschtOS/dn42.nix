@@ -6,6 +6,7 @@ in
   imports = [
     ./firewall.nix
     ./bird2.nix
+    ./rtr.nix
   ];
 
   options.networking.dn42 = {

@@ -38,20 +38,14 @@ in
         roa4 table dnroa4;
         roa6 table dnroa6;
 
-        protocol static static_roa_4 {
-          roa4 {
-            table dnroa4;
-          };
-
-          include "${../resources/roa4.conf}";
-        }
-
-        protocol static static_roa_6 {
-          roa6 {
-            table dnroa6;
-          };
-
-          include "${../resources/roa6.conf}";
+        protocol rpki roa_dn42 {
+          roa4 { table dnroa4; };
+          roa6 { table dnroa6; };
+          remote 127.0.0.1;
+          port 8082;
+          refresh 600;
+          retry 300;
+          expire 7200;
         }
 
         include "${../resources/community_filter.conf}";
