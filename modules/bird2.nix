@@ -38,15 +38,17 @@ in
         roa4 table dnroa4;
         roa6 table dnroa6;
 
-        protocol rpki roa_dn42 {
-          roa4 { table dnroa4; };
-          roa6 { table dnroa6; };
-          remote 127.0.0.1;
-          port 8082;
-          refresh 600;
-          retry 300;
-          expire 7200;
-        }
+        ${lib.optionalString config.services.dn42-stayrtr.enable ''
+          protocol rpki roa_dn42 {
+            roa4 { table dnroa4; };
+            roa6 { table dnroa6; };
+            remote 127.0.0.1;
+            port 8082;
+            refresh 600;
+            retry 300;
+            expire 7200;
+          }
+        ''}
 
         include "${../resources/community_filter.conf}";
         include "${../resources/filters.conf}";
