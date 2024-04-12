@@ -9,7 +9,10 @@
     in
     {
       nixosModules = rec {
-        dn42 = import ./modules;
+        dn42 = {
+          imports = [ ./modules ];
+          nixpkgs.overlays = [ self.overlays.default ];
+        };
         default = dn42;
       };
 
@@ -26,5 +29,25 @@
           };
         })
         systems);
+
+      packages = builtins.listToAttrs (map
+        (system: {
+          name = system;
+          value = {
+            dn42-roagen = import ./pkgs/dn42-roagen {
+              pkgs = nixpkgs.legacyPackages.${system};
+            };
+          };
+        })
+        systems);
+
+      overlays = rec {
+        dn42 = final: prev: {
+          dn42-roagen = import ./pkgs/dn42-roagen {
+            pkgs = prev;
+          };
+        };
+        default = dn42;
+      };
     };
 }
