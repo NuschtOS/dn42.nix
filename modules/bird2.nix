@@ -49,6 +49,16 @@ in
             expire 7200;
           }
         ''}
+        ${lib.optionalString config.services.dn42-roagen.enable ''
+          protocol static {
+            roa4 { table dnroa4; };
+            include "${config.services.dn42-roagen.outputDir}/dn42-roa4.conf";
+          }
+          protocol static {
+            roa6 { table dnroa6; };
+            include "${config.services.dn42-roagen.outputDir}/dn42-roa6.conf";
+          }
+        ''}
 
         include "${../resources/community_filter.conf}";
         include "${../resources/filters.conf}";

@@ -7,6 +7,7 @@ in
     ./firewall.nix
     ./bird2.nix
     ./stayrtr.nix
+    ./roagen.nix
   ];
 
   options.networking.dn42 = {
