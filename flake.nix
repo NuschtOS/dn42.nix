@@ -21,9 +21,11 @@
           name = system;
           value = {
             two-peers = import ./checks/two-peers.nix {
+              inherit self;
               pkgs = nixpkgs.legacyPackages.${system};
             };
             extended-next-hop = import ./checks/extended-next-hop.nix {
+              inherit self;
               pkgs = nixpkgs.legacyPackages.${system};
             };
           };
