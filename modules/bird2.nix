@@ -38,7 +38,7 @@ in
         roa4 table dnroa4;
         roa6 table dnroa6;
 
-        ${lib.optionalString config.services.dn42-stayrtr.enable ''
+        ${lib.optionalString config.networking.dn42.stayrtr.enable ''
           protocol rpki roa_dn42 {
             roa4 { table dnroa4; };
             roa6 { table dnroa6; };
@@ -49,14 +49,14 @@ in
             expire 7200;
           }
         ''}
-        ${lib.optionalString config.services.dn42-roagen.enable ''
+        ${lib.optionalString config.networking.dn42.roagen.enable ''
           protocol static {
             roa4 { table dnroa4; };
-            include "${config.services.dn42-roagen.outputDir}/dn42-roa4.conf";
+            include "${config.networking.dn42.roagen.outputDir}/dn42-roa4.conf";
           }
           protocol static {
             roa6 { table dnroa6; };
-            include "${config.services.dn42-roagen.outputDir}/dn42-roa6.conf";
+            include "${config.networking.dn42.roagen.outputDir}/dn42-roa6.conf";
           }
         ''}
 

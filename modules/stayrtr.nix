@@ -1,15 +1,14 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.services.dn42-stayrtr;
-
+  cfg = config.networking.dn42.stayrtr;
 in
 {
-  options.services.dn42-stayrtr = with lib; {
+  options.networking.dn42.stayrtr = with lib; {
     enable = mkEnableOption "dn42-stayrtr";
 
     cache = mkOption {
-      type = types.url;
+      type = types.str;
       default = "https://dn42.burble.com/roa/dn42_roa_46.json";
     };
   };

@@ -1,11 +1,10 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.services.dn42-roagen;
-
+  cfg = config.networking.dn42.roagen;
 in
 {
-  options.services.dn42-roagen = with lib; {
+  options.networking.dn42.roagen = with lib; {
     enable = mkEnableOption "dn42-roagen";
 
     outputDir = mkOption {
