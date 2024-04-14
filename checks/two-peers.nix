@@ -12,7 +12,7 @@ let
       Name = "dummy0";
     };
     environment.systemPackages = [ pkgs.jq ];
-    services.dn42-roagen = {
+    networking.dn42.roagen = {
       enable = true;
       outputDir = pkgs.runCommand "stub-roa" {} ''
         mkdir $out
