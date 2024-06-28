@@ -9,6 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@V27
-      - uses: DeterminateSystems/update-flake-lock@v22
+      - uses: DeterminateSystems/update-flake-lock@v23
         with:
           token: ${{ github.token }}
