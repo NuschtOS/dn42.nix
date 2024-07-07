@@ -32,7 +32,7 @@ in
         set -e
 
         cd /tmp
-        if [ -e registry ]; then
+        if [ ! -e registry ]; then
           git clone --depth=1 https://git.dn42.dev/dn42/registry.git
           cd registry
         else
