@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.networking.dn42.roagen;
@@ -33,11 +38,11 @@ in
 
         cd /tmp
         if [ ! -e registry ]; then
-          git clone --depth=1 https://git.dn42.dev/dn42/registry.git
+          ${lib.getExe pkgs.gitMinimal} clone --depth=1 https://git.dn42.dev/dn42/registry.git
           cd registry
         else
           cd registry
-          git pull --depth=1
+          ${lib.getExe pkgs.gitMinimal} pull --depth=1
         fi
 
         mkdir -p '${cfg.outputDir}'
@@ -53,8 +58,6 @@ in
       };
     };
 
-    systemd.tmpfiles.rules = [
-      "d ${cfg.outputDir} 755 bird2 bird2 -"
-    ];
+    systemd.tmpfiles.rules = [ "d ${cfg.outputDir} 755 bird2 bird2 -" ];
   };
 }
