@@ -48,7 +48,7 @@
         systems);
 
       overlays = rec {
-        dn42 = final: prev: {
+        dn42 = _: prev: {
           dn42-roagen = import ./pkgs/dn42-roagen {
             pkgs = prev;
           };

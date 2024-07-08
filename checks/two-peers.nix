@@ -1,7 +1,7 @@
 { self, pkgs ? import <nixpkgs> { } }:
 
 let
-  common = { config, pkgs, ... }: {
+  common = { pkgs, ... }: {
     imports = [ self.nixosModules.default ];
     networking.dn42.enable = true;
     virtualisation.interfaces.enp1s0.vlan = 1;

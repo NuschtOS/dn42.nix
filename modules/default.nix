@@ -64,7 +64,7 @@ in
     };
 
     peers = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule ({ config, name, ... }: {
+      type = lib.types.attrsOf (lib.types.submodule {
         options = {
           as = lib.mkOption {
             type = lib.types.int;
@@ -128,7 +128,7 @@ in
             description = "Interface name of the peer.";
           };
         };
-      }));
+      });
     };
   };
 }
