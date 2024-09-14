@@ -6,10 +6,10 @@ in
 {
   config = lib.mkIf cfg.enable {
     assertions = [
-      {
-        assertion = 0 == (builtins.length (builtins.filter (conf: (!conf.extendedNextHop && (conf.addr.v4 == null || conf.srcAddr.v4 == null))) (builtins.attrValues cfg.peers)));
-        message = "dn42.nix: IPv4 addresses are required, consider using extended next hop.";
-      }
+      #{
+      #  assertion = 0 == (builtins.length (builtins.filter (conf: (!conf.extendedNextHop && (conf.addr.v4 == null || conf.srcAddr.v4 == null))) (builtins.attrValues cfg.peers)));
+      #  message = "dn42.nix: IPv4 addresses are required, consider using extended next hop.";
+      #}
       {
         assertion = 0 == (builtins.length (builtins.filter (conf: (conf.extendedNextHop && (conf.addr.v4 != null || conf.srcAddr.v4 != null))) (builtins.attrValues cfg.peers)));
         message = "dn42.nix: IPv4 addresses are disallowed, consider not using extended next hop.";
@@ -62,14 +62,14 @@ in
 
         include "${../resources/community_filter.conf}";
         include "${../resources/filters.conf}";
-      
+
         router id ${cfg.routerId};
         hostname "${config.networking.hostName}.${config.networking.domain}";
 
         protocol device {
           scan time 10;
         }
-   
+
         protocol kernel kernel_4 {
           scan time 20;
 
@@ -111,7 +111,7 @@ in
           ${lib.concatMapStrings (net: ''
             route ${net} unreachable;
           '') cfg.nets.v6}
-          
+
           ipv6 {
             import all;
             export none;
@@ -136,7 +136,7 @@ in
         ${builtins.concatStringsSep "\n" (builtins.attrValues
           (builtins.mapAttrs
             (name: conf: ''
-              ${lib.optionalString (!conf.extendedNextHop) ''
+              ${lib.optionalString (!conf.extendedNextHop && conf.addr.v4 != null) ''
                 protocol bgp ${name}_4 from dnpeers {
                   neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
                   source address ${conf.srcAddr.v4};
@@ -187,7 +187,7 @@ in
           multihop;
 
           ipv4 {
-            # export all available paths to the collector    
+            # export all available paths to the collector
             add paths tx;
 
             # import/export filters
@@ -196,7 +196,7 @@ in
           };
 
           ipv6 {
-            # export all available paths to the collector    
+            # export all available paths to the collector
             add paths tx;
 
             # import/export filters
