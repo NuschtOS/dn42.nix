@@ -11,7 +11,7 @@ in
   ];
 
   options.networking.dn42 = {
-    enable = lib.mkEnableOption "Whether to enable dn42 integration.";
+    enable = lib.mkEnableOption "dn42 integration";
 
     routerId = lib.mkOption {
       type = lib.types.str;
