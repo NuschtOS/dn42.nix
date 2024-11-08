@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, libDn42, ... }:
 
 let
   cfg = config.networking.dn42;
@@ -118,7 +118,44 @@ in
           };
         }
 
-        template bgp dnpeers {
+        ${builtins.concatStringsSep "\n" (builtins.attrValues
+          (builtins.mapAttrs
+            (name: conf: ''
+              ${lib.optionalString (!conf.extendedNextHop) (
+              libDn42.mkPeerV4 {
+                inherit name;
+                ownAs = cfg.as;
+                remoteAs = conf.as;
+                ownIp = conf.srcAddr.v4;
+                remoteIp = conf.addr.v4;
+                
+                # bgp communities
+                latency = conf.latency;
+                bandwidth = conf.bandwidth;
+                crypto = conf.crypto;
+                transit = conf.transit;
+              })};
+
+              ${libDn42.mkPeerV6 {
+                inherit name;
+                ownAs = cfg.as;
+                remoteAs = conf.as;
+                ownIp = conf.srcAddr.v6;
+                remoteIp = conf.addr.v6;
+                ownInterface = conf.interface;
+                
+                # bgp communities
+                latency = conf.latency;
+                bandwidth = conf.bandwidth;
+                crypto = conf.crypto;
+                transit = conf.transit;
+
+                extendedNextHop = true;
+              }};
+            '')
+          cfg.peers))}
+
+        protocol bgp collector_6 from dnpeers {
           local as ${builtins.toString cfg.as};
 
           enforce first as on;
@@ -131,55 +168,7 @@ in
           enable route refresh on;
           interpret communities on;
           default bgp_local_pref 100;
-        }
 
-        ${builtins.concatStringsSep "\n" (builtins.attrValues
-          (builtins.mapAttrs
-            (name: conf: ''
-              ${lib.optionalString (!conf.extendedNextHop) ''
-                protocol bgp ${name}_4 from dnpeers {
-                  neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
-                  source address ${conf.srcAddr.v4};
-
-                  ipv4 {
-                    import limit 9000 action block;
-                    import table on;
-
-                    import where dn_import_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
-                    export where dn_export_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto}, ${lib.boolToString conf.transit});
-                  };
-                }
-              ''}
-
-              protocol bgp ${name}_6 from dnpeers {
-                ${lib.optionalString conf.extendedNextHop ''
-                  enable extended messages on;
-
-                  ipv4 {
-                    import limit 9000 action block;
-                    import table on;
-
-                    extended next hop on;
-                    import where dn_import_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
-                    export where dn_export_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto}, ${lib.boolToString conf.transit});
-                  };
-                ''}
-
-                ipv6 {
-                  import limit 9000 action block;
-                  import table on;
-
-                  import where dn_import_filter6(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
-                  export where dn_export_filter6(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto}, ${lib.boolToString conf.transit});
-                };
-
-                neighbor ${conf.addr.v6}%'${conf.interface}' as ${builtins.toString conf.as};
-                source address ${conf.srcAddr.v6};
-              }
-            '')
-          cfg.peers))}
-
-        protocol bgp collector_6 from dnpeers {
           neighbor fd42:4242:2601:ac12::1 as 4242422602;
           source address ${cfg.addr.v6};
 
