@@ -96,4 +96,40 @@ in
         source address ${ownIp};
       }
     '';
+  mkCollector6 =
+    {
+      ownAs,
+      remoteAs ? 4242422602,
+      ownIp,
+      remoteIp ? "fd42:4242:2601:ac12::1",
+    }:
+    ''
+      protocol bgp collector_6 {
+        ${template ownAs}
+
+        neighbor ${remoteIp} as ${toString remoteAs};
+        source address ${ownIp};
+
+        # enable multihop as the collector is not locally connected
+        multihop;
+
+        ipv4 {
+          # export all available paths to the collector
+          add paths tx;
+
+          # import/export filters
+          import none;
+          export where dn_export_collector4();
+        };
+
+        ipv6 {
+          # export all available paths to the collector
+          add paths tx;
+
+          # import/export filters
+          import none;
+          export where dn_export_collector6();
+        };
+      }
+    '';
 }

@@ -58,7 +58,7 @@
       };
 
       libDn42 = {
-        inherit (import ./lib/dn42.nix { inherit (nixpkgs) lib; }) mkPeerV4 mkPeerV6;
+        inherit (import ./lib/dn42.nix { inherit (nixpkgs) lib; }) mkPeerV4 mkPeerV6 mkCollector6;
       };
     };
 }

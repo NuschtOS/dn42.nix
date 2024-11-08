@@ -155,44 +155,10 @@ in
             '')
           cfg.peers))}
 
-        protocol bgp collector_6 from dnpeers {
-          local as ${builtins.toString cfg.as};
-
-          enforce first as on;
-          graceful restart on;
-          long lived graceful restart on;
-          advertise hostname on;
-          prefer older on;
-
-          # defaults
-          enable route refresh on;
-          interpret communities on;
-          default bgp_local_pref 100;
-
-          neighbor fd42:4242:2601:ac12::1 as 4242422602;
-          source address ${cfg.addr.v6};
-
-          # enable multihop as the collector is not locally connected
-          multihop;
-
-          ipv4 {
-            # export all available paths to the collector    
-            add paths tx;
-
-            # import/export filters
-            import none;
-            export where dn_export_collector4();
-          };
-
-          ipv6 {
-            # export all available paths to the collector    
-            add paths tx;
-
-            # import/export filters
-            import none;
-            export where dn_export_collector6();
-          };
-        }
+        ${libDn42.mkCollector6 {
+          ownAs = cfg.as;
+          ownIp = cfg.addr.v6;
+        }}
       '';
     };
   };
