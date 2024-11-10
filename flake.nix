@@ -16,7 +16,6 @@
         dn42 = {
           imports = [ ./modules ];
           nixpkgs.overlays = [ self.overlays.default ];
-          _module.args = { inherit (self) libDn42; };
         };
         default = dn42;
       };
@@ -55,10 +54,6 @@
           };
         };
         default = dn42;
-      };
-
-      libDn42 = {
-        inherit (import ./lib/dn42.nix { inherit (nixpkgs) lib; }) mkPeerV4 mkPeerV6 mkCollector6;
       };
     };
 }
