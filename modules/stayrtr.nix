@@ -14,12 +14,17 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    systemd.services.bird2 = {
+      after = [ "dn42-stayrtr.service" ];
+      requires = [ "dn42-stayrtr.service" ];
+    };
+
     systemd.services.dn42-stayrtr = {
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
 
       serviceConfig = {
-        ExecStart = "${pkgs.stayrtr}/bin/stayrtr -cache '${cfg.cache}' -checktime=false -bind :8082";
+        ExecStart = "${lib.getExe pkgs.stayrtr} -cache '${cfg.cache}' -checktime=false -bind :8082";
         DynamicUser = true;
         User = "dn42-stayrtr";
       };
