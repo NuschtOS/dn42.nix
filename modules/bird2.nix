@@ -2,6 +2,7 @@
 
 let
   cfg = config.networking.dn42;
+  useVrf = cfg.vrf.name != null && cfg.vrf.table != null;
 in
 {
   config = lib.mkIf cfg.enable {
@@ -35,8 +36,12 @@ in
           return net ~ [${builtins.concatStringsSep ", " cfg.nets.v6}];
         }
 
-        roa4 table dnroa4;
-        roa6 table dnroa6;
+        ${lib.optionalString useVrf ''
+        ipv4 table ${cfg.vrf.name}_4;
+        ipv6 table ${cfg.vrf.name}_6;
+        ''}
+        roa4 table dnroa_4;
+        roa6 table dnroa_6;
 
         include "${../resources/community_filter.conf}";
         include "${../resources/filters.conf}";
@@ -62,8 +67,8 @@ in
       protocols = {
 
         rpki.roa_dn42 = lib.mkIf config.networking.dn42.stayrtr.enable ''
-          roa4 { table dnroa4; };
-          roa6 { table dnroa6; };
+          roa4 { table dnroa_4; };
+          roa6 { table dnroa_6; };
           remote 127.0.0.1;
           port 8082;
           refresh 600;
@@ -73,22 +78,28 @@ in
 
         static = {
           static_roa_4 = lib.mkIf config.networking.dn42.roagen.enable ''
-            roa4 { table dnroa4; };
+            roa4 { table dnroa_4; };
             include "${config.networking.dn42.roagen.outputDir}/dn42-roa4.conf";
           '';
           static_roa_6 = lib.mkIf config.networking.dn42.roagen.enable ''
-            roa6 { table dnroa6; };
+            roa6 { table dnroa_6; };
             include "${config.networking.dn42.roagen.outputDir}/dn42-roa6.conf";
           '';
           static_4 = ''
-            ipv4;
+            ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
+            ipv4 {
+              ${lib.optionalString useVrf "table ${cfg.vrf.name}_4;"}
+            };
 
             ${lib.concatMapStrings (net: ''
               route ${net} unreachable;
             '') cfg.nets.v4}
           '';
           static_6 = ''
-            ipv6;
+            ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
+            ipv6 {
+              ${lib.optionalString useVrf "table ${cfg.vrf.name}_6;"}
+            };
 
             ${lib.concatMapStrings (net: ''
               route ${net} unreachable;
@@ -102,9 +113,15 @@ in
 
         kernel = {
           kernel_4 = ''
+            ${lib.optionalString useVrf ''
+            vrf "${cfg.vrf.name}";
+            kernel table ${toString cfg.vrf.table};
+            ''}
             scan time 20;
 
             ipv4 {
+              ${lib.optionalString useVrf "table ${cfg.vrf.name}_4;"}
+
               import none;
               export filter {
                 if source = RTS_STATIC then reject;
@@ -115,9 +132,15 @@ in
           '';
 
           kernel_6 = ''
+            ${lib.optionalString useVrf ''
+            vrf "${cfg.vrf.name}";
+            kernel table ${toString cfg.vrf.table};
+            ''}
             scan time 20;
 
             ipv6 {
+              ${lib.optionalString useVrf "table ${cfg.vrf.name}_6;"}
+              
               import none;
               export filter {
                 if source = RTS_STATIC then reject;
@@ -133,10 +156,12 @@ in
             (name: conf:
               {
                 "${name}_4 from dn42_peer" = lib.mkIf (!conf.extendedNextHop) ''
+                  ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
                   neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
                   source address ${conf.srcAddr.v4};
 
                   ipv4 {
+                    ${lib.optionalString useVrf "table ${cfg.vrf.name}_4;"}
                     import limit 9000 action block;
                     import table on;
                     import where dn_import_filter4(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
@@ -145,10 +170,15 @@ in
                 '';
 
                 "${name}_6 from dn42_peer" = ''
+                  ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
+                  neighbor ${conf.addr.v6}%'${conf.interface}' as ${builtins.toString conf.as};
+                  source address ${conf.srcAddr.v6};
+
                   ${lib.optionalString conf.extendedNextHop ''
                     enable extended messages on;
 
                     ipv4 {
+                      ${lib.optionalString useVrf "table ${cfg.vrf.name}_4;"}
                       import limit 9000 action block;
                       import table on;
 
@@ -159,20 +189,19 @@ in
                   ''}
 
                   ipv6 {
+                    ${lib.optionalString useVrf "table ${cfg.vrf.name}_6;"}
                     import limit 9000 action block;
                     import table on;
 
                     import where dn_import_filter6(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto});
                     export where dn_export_filter6(${toString conf.latency}, ${toString conf.bandwidth}, ${toString conf.crypto}, ${lib.boolToString conf.transit});
                   };
-
-                  neighbor ${conf.addr.v6}%'${conf.interface}' as ${builtins.toString conf.as};
-                  source address ${conf.srcAddr.v6};
                 '';
               })
             cfg.peers)
           ++ [{
             "collector_6 from dn42_peer" = ''
+              ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
               neighbor fd42:4242:2601:ac12::1 as 4242422602;
               source address ${cfg.addr.v6};
 
@@ -180,6 +209,7 @@ in
               multihop;
 
               ipv4 {
+                ${lib.optionalString useVrf "table ${cfg.vrf.name}_4;"}
                 # export all available paths to the collector
                 add paths tx;
 
@@ -189,6 +219,7 @@ in
               };
 
               ipv6 {
+                ${lib.optionalString useVrf "table ${cfg.vrf.name}_6;"}
                 # export all available paths to the collector
                 add paths tx;
 
