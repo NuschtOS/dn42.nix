@@ -130,5 +130,18 @@ in
         };
       });
     };
+
+    vrf = {
+      name = lib.mkOption {
+        type = lib.types.strMatching "^[A-Za-z0-9_]+$";
+        default = "vrf0";
+        description = "Name of the vrf to use. May differ from the kernel vrf name.";
+      };
+      table = lib.mkOption {
+        type = with lib.types; nullOr int;
+        default = null;
+        description = "Kernel routing table number to use.";
+      };
+    };
   };
 }
