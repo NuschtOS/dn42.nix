@@ -1,9 +1,13 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    bird = {
+      url = "github:NuschtOS/bird.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, ... }:
+  outputs = { self, nixpkgs, bird, ... }:
     let
       systems = [
         "x86_64-linux"
@@ -14,9 +18,8 @@
     {
       nixosModules = rec {
         dn42 = {
-          imports = [ ./modules ];
+          imports = [ bird.nixosModules.bird ./modules ];
           nixpkgs.overlays = [ self.overlays.default ];
-          _module.args = { inherit (self) libDn42; };
         };
         default = dn42;
       };
@@ -55,10 +58,6 @@
           };
         };
         default = dn42;
-      };
-
-      libDn42 = {
-        inherit (import ./lib/dn42.nix { inherit (nixpkgs) lib; }) mkPeerV4 mkPeerV6 mkCollector6;
       };
     };
 }
