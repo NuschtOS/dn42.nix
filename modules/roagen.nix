@@ -29,6 +29,14 @@ in
       timerConfig.OnCalendar = "hourly";
     };
 
+    services.bird2.preCheckConfig = ''
+      rm bird2.conf
+      cp $out bird2.conf
+      substituteInPlace bird2.conf \
+        --replace-fail '${cfg.outputDir}' '/tmp'
+      touch /tmp/dn42-roa{4,6}.conf
+    '';
+
     systemd.services.dn42-roagen = {
       after = [ "systemd-tmpfiles-setup.service" ];
       before = [ "bird2.service" ];
