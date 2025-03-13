@@ -1,8 +1,9 @@
-{ config, lib, ... }:
+{ config, lib, options, ... }:
 
 let
   cfg = config.networking.dn42;
   useVrf = cfg.vrf.name != null && cfg.vrf.table != null;
+  bird = if options.services?bird then "bird" else "bird2";
 in
 {
   config = lib.mkIf cfg.enable {
@@ -17,7 +18,7 @@ in
       }
     ];
 
-    services.bird2 = {
+    services.${bird} = {
       enable = true;
       config = ''
         define OWNAS = ${toString cfg.as};
@@ -140,7 +141,7 @@ in
 
             ipv6 {
               ${lib.optionalString useVrf "table ${cfg.vrf.name}_6;"}
-              
+
               import none;
               export filter {
                 if source = RTS_STATIC then reject;
