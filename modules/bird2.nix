@@ -1,9 +1,9 @@
-{ config, lib, options, ... }:
+{ config, lib, ... }:
 
 let
   cfg = config.networking.dn42;
   useVrf = cfg.vrf.name != null && cfg.vrf.table != null;
-  bird = if options.services?bird then "bird" else "bird2";
+  bird = if lib.versionAtLeast lib.version "25.05" then "bird" else "bird2";
 in
 {
   config = lib.mkIf cfg.enable {
