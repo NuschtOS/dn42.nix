@@ -7,6 +7,7 @@
 
 let
   cfg = config.networking.dn42.roagen;
+  bird = if lib.versionAtLeast lib.version "25.05" then "bird" else "bird2";
 in
 {
   options.networking.dn42.roagen = with lib; {
@@ -29,10 +30,10 @@ in
       timerConfig.OnCalendar = "hourly";
     };
 
-    services.bird2.preCheckConfig = ''
-      rm bird2.conf
-      cp $out bird2.conf
-      substituteInPlace bird2.conf \
+    services.${bird}.preCheckConfig = ''
+      rm ${bird}.conf
+      cp $out ${bird}.conf
+      substituteInPlace ${bird}.conf \
         --replace-fail '${cfg.outputDir}' '/tmp'
       touch /tmp/dn42-roa{4,6}.conf
     '';

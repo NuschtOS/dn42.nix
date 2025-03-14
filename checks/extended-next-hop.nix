@@ -1,6 +1,8 @@
-{ self, pkgs ? import <nixpkgs> { } }:
+{ self, pkgs }:
 
 let
+  bird = if pkgs.lib.versionAtLeast pkgs.lib.version "25.05" then "bird" else "bird2";
+
   common = { pkgs, ... }: {
     imports = [ self.nixosModules.default ];
     networking.dn42.enable = true;
@@ -126,8 +128,8 @@ pkgs.nixosTest rec {
   testScript = ''
     foo.succeed("ip -6 mon > /dev/console &")
 
-    foo.wait_for_unit("bird2")
-    bar.wait_for_unit("bird2")
+    foo.wait_for_unit("${bird}")
+    bar.wait_for_unit("${bird}")
 
     with subtest("Waiting for advertised IPv4 routes"):
       foo.wait_until_succeeds("ip --json r | jq -e 'map(select(.dst == \"${builtins.head nodes.bar.networking.dn42.nets.v4}\")) | any'")
