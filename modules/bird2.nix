@@ -7,16 +7,20 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = 0 == (builtins.length (builtins.filter (conf: (!conf.extendedNextHop && (conf.addr.v4 == null || conf.srcAddr.v4 == null))) (builtins.attrValues cfg.peers)));
-        message = "dn42.nix: IPv4 addresses are required, consider using extended next hop.";
-      }
-      {
-        assertion = 0 == (builtins.length (builtins.filter (conf: (conf.extendedNextHop && (conf.addr.v4 != null || conf.srcAddr.v4 != null))) (builtins.attrValues cfg.peers)));
-        message = "dn42.nix: IPv4 addresses are disallowed, consider not using extended next hop.";
-      }
-    ];
+    assertions =
+      builtins.attrValues (
+        builtins.mapAttrs (peer: conf: {
+          assertion = !conf.extendedNextHop -> conf.addr.v4 != null && conf.srcAddr.v4 != null;
+          message = "dn42.nix peer ${peer}: IPv4 addresses are required, consider using extended next hop.";
+        }) cfg.peers
+      )
+      ++
+      builtins.attrValues (
+        builtins.mapAttrs (peer: conf: {
+          assertion = conf.extendedNextHop -> conf.addr.v4 == null && conf.srcAddr.v4 == null;
+          message = "dn42.nix peer ${peer}: IPv4 addresses are disallowed, consider not using extended next hop.";
+        }) cfg.peers
+      );
 
     services.${bird} = {
       enable = true;
