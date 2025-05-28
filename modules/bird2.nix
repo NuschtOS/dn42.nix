@@ -200,7 +200,7 @@ in
                 '';
               })
             cfg.peers)
-          ++ [{
+          ++ lib.optional cfg.collector.enable {
             "collector_6 from dn42_peer" = ''
               ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
               neighbor fd42:4242:2601:ac12::1 as 4242422602;
@@ -229,7 +229,7 @@ in
                 export where dn_export_collector6();
               };
             '';
-          }]);
+          });
       };
     };
   };
