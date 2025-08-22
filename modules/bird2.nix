@@ -176,7 +176,8 @@ in
 
                 "${name}_6 from dn42_peer" = ''
                   ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
-                  neighbor ${conf.addr.v6}%'${conf.interface}' as ${builtins.toString conf.as};
+                  interface "${conf.interface}";
+                  neighbor ${conf.addr.v6} as ${builtins.toString conf.as};
                   source address ${conf.srcAddr.v6};
 
                   ${lib.optionalString conf.extendedNextHop ''
