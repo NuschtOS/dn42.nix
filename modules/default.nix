@@ -39,6 +39,8 @@ in
       description = "";
     };
 
+    collector.enable = lib.mkEnableOption "Enable route collector";
+
     addr = {
       v4 = lib.mkOption {
         type = lib.types.str;
