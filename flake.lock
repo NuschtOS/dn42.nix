@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1748286409,
-        "narHash": "sha256-G0kEqS7f1Qb2EBuQPIiTQfx85+NB3me3XTqQI8zdDs4=",
+        "lastModified": 1757884119,
+        "narHash": "sha256-RF0Em7PjDRaQ5cBFgc3fL22qgDVbv2HoVW1TDRaaSNo=",
         "owner": "NuschtOS",
         "repo": "bird.nix",
-        "rev": "07e79e7893513b4f88e08eb3718ad1aac2eeef4e",
+        "rev": "f8d18c2c8eebd477987001a9c0af50a9ca7909e5",
         "type": "github"
       },
       "original": {
