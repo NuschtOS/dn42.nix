@@ -3,7 +3,6 @@
 let
   cfg = config.networking.dn42;
   useVrf = cfg.vrf.name != null && cfg.vrf.table != null;
-  bird = if lib.versionAtLeast lib.version "25.05" then "bird" else "bird2";
 in
 {
   config = lib.mkIf cfg.enable {
@@ -22,7 +21,7 @@ in
         }) cfg.peers
       );
 
-    services.${bird} = {
+    services.bird = {
       enable = true;
       config = ''
         define OWNAS = ${toString cfg.as};
@@ -82,14 +81,6 @@ in
         '';
 
         static = {
-          static_roa_4 = lib.mkIf config.networking.dn42.roagen.enable ''
-            roa4 { table dnroa_4; };
-            include "${config.networking.dn42.roagen.outputDir}/dn42-roa4.conf";
-          '';
-          static_roa_6 = lib.mkIf config.networking.dn42.roagen.enable ''
-            roa6 { table dnroa_6; };
-            include "${config.networking.dn42.roagen.outputDir}/dn42-roa6.conf";
-          '';
           static_4 = ''
             ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
             ipv4 {
