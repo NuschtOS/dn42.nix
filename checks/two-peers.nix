@@ -17,7 +17,7 @@ let
   };
 
 in
-pkgs.nixosTest rec {
+pkgs.testers.nixosTest rec {
   name = "two-peers";
 
   nodes = {
