@@ -26,17 +26,17 @@ in
 
     geo = lib.mkOption {
       type = lib.types.int;
-      description = "";
+      description = "Geo code as defined in <https://dn42.net/howto/BGP-communities.md#region>.";
     };
 
     country = lib.mkOption {
       type = lib.types.int;
-      description = "";
+      description = "Country code vaguely based on ISO-3166-1 as defined in <https://dn42.net/howto/BGP-communities.md#country> See <https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes> for a list.";
     };
 
     blockedAs = lib.mkOption {
       type = lib.types.listOf lib.types.int;
-      description = "";
+      description = "List of blocked AS numbers.";
     };
 
     collector.enable = lib.mkEnableOption "Enable route collector";
@@ -81,22 +81,22 @@ in
 
           latency = lib.mkOption {
             type = lib.types.int;
-            description = "";
+            description = "Latency magic number of immeadiate link as described in <https://dn42.net/howto/BGP-communities#bgp-community-criteria>.";
           };
 
           bandwidth = lib.mkOption {
             type = lib.types.int;
-            description = "";
+            description = "Bandwith magic number between the peers as described in <https://dn42.net/howto/BGP-communities#bgp-community-criteria>.";
           };
 
           crypto = lib.mkOption {
             type = lib.types.int;
-            description = "";
+            description = "Encryption magic number as described in <https://dn42.net/howto/BGP-communities#bgp-community-criteria>";
           };
 
           transit = lib.mkOption {
             type = lib.types.bool;
-            description = "";
+            description = "Whether to provide a full table or not. Note: This option must be either true or false for all peers.";
           };
 
           addr = {
