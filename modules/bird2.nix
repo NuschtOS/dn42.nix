@@ -208,7 +208,7 @@ in
           ++ lib.optional cfg.collector.enable {
             "collector_6 from dn42_peer" = ''
               ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
-              neighbor fd42:4242:2601:ac12::1 as 4242422602;
+              neighbor fd42:d42:d42:179::1 as 4242422602;
               source address ${cfg.addr.v6};
 
               # enable multihop as the collector is not locally connected
