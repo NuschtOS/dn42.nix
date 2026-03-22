@@ -154,7 +154,7 @@ in
                 "${name}_4 from dn42_peer" = lib.mkIf (!conf.extendedNextHop) ''
                   ${lib.optionalString useVrf "vrf \"${cfg.vrf.name}\";"}
                   neighbor ${conf.addr.v4} as ${builtins.toString conf.as};
-                  source address ${conf.srcAddr.v4 or throw "no IPv4 source address found, do you want to use extendedNextHop?"};
+                  source address ${conf.srcAddr.v4 or (throw "no IPv4 source address found, do you want to use extendedNextHop?")};
 
                   ipv4 {
                     ${lib.optionalString useVrf "table ${cfg.vrf.name}_4;"}
