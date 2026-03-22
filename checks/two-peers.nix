@@ -14,24 +14,10 @@ let
       Name = "dummy0";
     };
     environment.systemPackages = [ pkgs.jq ];
-    networking.dn42.roagen = {
-      enable = true;
-      outputDir = pkgs.runCommand "stub-roa" {} ''
-        mkdir $out
-        cat >$out/dn42-roa4.conf <<EOF
-        route 172.20.0.0/24 max 24 as 64600;
-        route 172.20.1.0/24 max 24 as 64601;
-        EOF
-        cat >$out/dn42-roa6.conf <<EOF
-        route fec1::/64 max 64 as 64600;
-        route fec1:0:0:1::/64 max 64 as 64601;
-        EOF
-      '';
-    };
   };
 
 in
-pkgs.nixosTest rec {
+pkgs.testers.nixosTest rec {
   name = "two-peers";
 
   nodes = {

@@ -2,7 +2,6 @@
 
 let
   cfg = config.networking.dn42.stayrtr;
-  bird = if lib.versionAtLeast lib.version "25.05" then "bird" else "bird2";
 in
 {
   options.networking.dn42.stayrtr = with lib; {
@@ -15,7 +14,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    systemd.services.${bird} = {
+    systemd.services.bird = {
       after = [ "dn42-stayrtr.service" ];
       requires = [ "dn42-stayrtr.service" ];
     };
