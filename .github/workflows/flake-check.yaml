@@ -25,7 +25,7 @@ jobs:
       - name: Install Nix
         uses: nixbuild/nix-quick-install-action@v34
 
-      - uses: nix-community/cache-nix-action@v6
+      - uses: nix-community/cache-nix-action@v7
         with:
           primary-key: nix-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
           restore-prefixes-first-match: nix-${{ runner.os }}-${{ matrix.target }}-
