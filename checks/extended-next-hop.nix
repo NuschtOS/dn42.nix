@@ -31,7 +31,7 @@ let
   };
 
 in
-pkgs.nixosTest rec {
+pkgs.testers.nixosTest rec {
   name = "extended-next-hop";
 
   nodes = {
